@@ -1,0 +1,96 @@
+-- Step 1: Create Manager Table
+CREATE TABLE manager (
+    managerid INT PRIMARY KEY,      # Unique ID for each manager
+    managername VARCHAR(50)         # Name of the manager
+);
+
+-- Step 2: Create Employee Table
+CREATE TABLE employee (
+    empid INT PRIMARY KEY,           # Unique ID for each employee
+    firstname VARCHAR(25),           # Employee's first name
+    lastname VARCHAR(25),            # Employee's last name
+    department VARCHAR(25),          # Department where the employee works
+    managerid INT,                   # Foreign key referencing the manager's ID
+    FOREIGN KEY (managerid) REFERENCES manager(managerid)  # Establishing foreign key relationship
+);
+
+-- Step 3: Insert Data into Manager Table
+INSERT INTO manager (managerid, managername) VALUES
+(1, 'Rajesh Sharma'),  # Manager with ID 1
+(2, 'Anita Verma'),    # Manager with ID 2
+(3, 'Suresh Gupta');   # Manager with ID 3
+
+-- Step 4: Insert Data into Employee Table
+INSERT INTO employee (empid, firstname, lastname, department, managerid) VALUES
+(101, 'Ravi', 'Kumar', 'Sales', 1),     # Managed by Rajesh Sharma
+(102, 'Sneha', 'Iyer', 'Sales', 1),      # Managed by Rajesh Sharma
+(103, 'Amit', 'Patel', 'HR', 2),         # Managed by Anita Verma
+(104, 'Priya', 'Chawla', 'HR', 2),       # Managed by Anita Verma
+(105, 'Deepak', 'Nair', 'IT', 3),        # Managed by Suresh Gupta
+(106, 'Neha', 'Reddy', 'IT', 3);          # Managed by Suresh Gupta
+
+-- Query 1: Get All Employees Under Each Manager
+SELECT 
+    m.managername,
+    e.empid,
+    e.firstname,
+    e.lastname,
+    e.department
+FROM 
+    manager m
+JOIN 
+    employee e ON m.managerid = e.managerid
+ORDER BY 
+    m.managername, e.lastname;
+
+-- Query 2: Count of Employees Under Each Manager with Employee Names
+SELECT 
+    m.managername,
+    COUNT(e.empid) AS employee_count,
+    GROUP_CONCAT(CONCAT(e.firstname, ' ', e.lastname) SEPARATOR ', ') AS employee_names
+FROM 
+    manager m
+LEFT JOIN 
+    employee e ON m.managerid = e.managerid
+GROUP BY 
+    m.managername;
+
+-- Query 3: Get All Manager Details
+SELECT 
+    managerid,
+    managername
+FROM 
+    manager;
+
+-- Query 4: Find Any Employee Who Has Not Been Assigned Any Manager
+SELECT 
+    empid,
+    firstname,
+    lastname,
+    department
+FROM 
+    employee
+WHERE 
+    managerid IS NULL;
+
+-- Step 5: Create a Function to Concatenate First Name and Last Name
+DELIMITER $$
+
+CREATE FUNCTION GetFullName(empid INT) 
+RETURNS VARCHAR(50)
+DETERMINISTIC
+BEGIN
+    DECLARE full_name VARCHAR(50);
+    SELECT CONCAT(firstname, ' ', lastname) INTO full_name 
+    FROM employee 
+    WHERE empid = empid
+    LIMIT 1;  -- Ensure only one row is returned
+    RETURN full_name;
+END $$
+
+DELIMITER ;
+
+-- Query to Test the Function
+SELECT GetFullName(101) AS full_name;  
+
+
